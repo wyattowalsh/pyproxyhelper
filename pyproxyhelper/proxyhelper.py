@@ -62,29 +62,33 @@ class ProxyHelper:
         df.to_csv(filename, index=False)
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
 
-    async def get_proxies(self, force: bool = False) -> list:
-        # load the file if it exists
-        if os.path.exists(PROXIES_FILE_NAME):
-            df = pd.read_csv(PROXIES_FILE_NAME)
-            # if retrieved within the last hour, return the proxies
-            if datetime.now() - timedelta(hours=1) < pd.to_datetime(df.columns[0]):
-                self.proxies = df[df.columns[0]].tolist()
-                logger.info(f"Retrieved {len(self.proxies)} proxies from file")
-                return self.proxies
-            else:
-                logger.info("Proxies file is outdated, fetching new proxies")
-                self.proxies = await self.get_proxies_helper()
-                self.save_proxies()
-                return self.proxies
+    async def load_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame:
+        if os.path.exists(filename):
+            df = pd.read_csv(filename)
+            self.proxies = df[df.columns[0]].tolist()
+            logger.info(f"Loaded {len(self.proxies)} proxies from {filename}")
+            return df
         else:
-            logger.warning(f"File {PROXIES_FILE_NAME} does not exist.")
-            logger.info("Fetching new proxies")
+            logger.error(f"File {filename} does not exist.")
+            logger.info("Fetching new proxies...")
             self.proxies = await self.get_proxies_helper()
             self.save_proxies()
+
+    async def get_proxies(self, force: bool = False) -> list:
+        df = await self.load_proxies()
+        if datetime.now() - timedelta(hours=1) < pd.to_datetime(df.columns[0]):
+            self.proxies = df[df.columns[0]].tolist()
+            logger.info(f"Retrieved {len(self.proxies)} proxies from file")
+            return self.proxies
+        else:
+            logger.info("Proxies file is outdated, fetching new proxies")
+            self.proxies = await self.get_proxies_helper()
+            self.save_proxies()
+            return self.proxies
 
     def get_proxy(self):
         # if no proxies, fetch them
         if not self.proxies:
-            self.get_proxies()
+            self.proxies = asyncio.run(self.get_proxies())
         # return a random proxy
         return random.choice(self.proxies)
