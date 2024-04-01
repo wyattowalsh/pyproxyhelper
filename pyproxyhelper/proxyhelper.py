@@ -53,7 +53,7 @@ class ProxyHelper:
             logger.error(f"Error in provider {provider.__name__}: {e}")
             return []
 
-    def save_proxies(self, filename: str = PROXIES_FILE_NAME) -> None:
+    def save_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame | None:
         if not self.proxies:
             logger.error("No proxies to save.")
             return
@@ -61,6 +61,7 @@ class ProxyHelper:
         df = pd.DataFrame(self.proxies, columns=[datetime.now().isoformat()])
         df.to_csv(filename, index=False)
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
+        return df
 
     async def load_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame:
         if os.path.exists(filename):
@@ -72,7 +73,8 @@ class ProxyHelper:
             logger.error(f"File {filename} does not exist.")
             logger.info("Fetching new proxies...")
             self.proxies = await self.get_proxies_helper()
-            self.save_proxies()
+            df = self.save_proxies()
+            return df
 
     async def get_proxies(self, force: bool = False) -> list:
         df = await self.load_proxies()
