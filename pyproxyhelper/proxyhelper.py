@@ -28,7 +28,7 @@ class ProxyHelper:
         """
         Args:
             log_to_console (bool, optional): whether or not to log to console. Defaults to True.
-            log_to_file (bool, optioqnal): whether or not to log to file. Defaults to True.
+            log_to_file (bool, optional): whether or not to log to file. Defaults to True.
         """
         start_logger(console=log_to_console, file=log_to_file)
         self.providers = PROVIDERS
@@ -62,7 +62,7 @@ class ProxyHelper:
         df.to_csv(filename, index=False)
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
 
-    def get_proxies(self, force: bool = False) -> list:
+    async def get_proxies(self, force: bool = False) -> list:
         # load the file if it exists
         if os.path.exists(PROXIES_FILE_NAME):
             df = pd.read_csv(PROXIES_FILE_NAME)
@@ -73,13 +73,13 @@ class ProxyHelper:
                 return self.proxies
             else:
                 logger.info("Proxies file is outdated, fetching new proxies")
-                self.proxies = asyncio.run(self.get_proxies_helper())
+                self.proxies = await self.get_proxies_helper()
                 self.save_proxies()
                 return self.proxies
         else:
             logger.warning(f"File {PROXIES_FILE_NAME} does not exist.")
             logger.info("Fetching new proxies")
-            self.proxies = asyncio.run(self.get_proxies_helper())
+            self.proxies = await self.get_proxies_helper()
             self.save_proxies()
 
     def get_proxy(self):
