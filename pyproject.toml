@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pyproxyhelper"
+version = "0.1.0"
+description = ""
+authors = ["wyattowalsh <wyattowalsh@gmail.com>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.2.1"
+aiohttp = "^3.9.3"
+loguru = "^0.7.2"
+rich = "^13.7.1"
+lxml = "^5.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
