@@ -2,6 +2,7 @@
 File: pyproxyhelper/proxyhelper.py
 Author: @wyattowalsh
 Description: Main module for the pyproxyhelper package.
+Tests: tests/test_proxyhelper.py
 """
 import asyncio
 import os
@@ -110,24 +111,33 @@ class ProxyHelper:
         self.providers = PROVIDERS
         self.proxies = []
 
+    async def fetch_provider_proxies(self, provider: Provider) -> list:
+        """Fetch proxies from a given provider.
+
+        Args:
+            provider: An instance of a Provider class that has a get_proxies method.
+
+        Returns:
+            A list of proxies fetched from the provider, or an empty list in case of an exception.
+        """
+        try:
+            # Assuming provider is already an instance, so we directly call get_proxies without instantiation.
+            return await provider.get_proxies()
+        except Exception as e:
+            logger.error(f"Error in provider {provider.__name__}: {e}")
+            return []
+
     async def get_proxies_helper(self) -> list:
         tasks = (self.fetch_provider_proxies(
             provider) for provider in self.providers)
         proxies_lists = await asyncio.gather(*tasks, return_exceptions=True)
+        self.proxies = []
         for proxies in proxies_lists:
             if isinstance(proxies, Exception):
                 logger.error(f"Error fetching proxies: {proxies}")
             else:
-                self.proxies.extend(proxies)
+                self.proxies = self.proxies + proxies
         return self.proxies
-
-    async def fetch_provider_proxies(self, provider: Provider) -> list:
-        try:
-            provider_instance = provider()
-            return await provider_instance.get_proxies()
-        except Exception as e:
-            logger.error(f"Error in provider {provider.__name__}: {e}")
-            return []
 
     def save_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame | None:
         if not self.proxies:
@@ -135,7 +145,7 @@ class ProxyHelper:
             return
         # add with timestamp as column name
         df = pd.DataFrame(self.proxies, columns=[datetime.now().isoformat()])
-        df.to_csv(filename, index=False, 
+        df.to_csv(filename, index=False)
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
         return df
 
@@ -165,8 +175,9 @@ class ProxyHelper:
             return self.proxies
 
     def get_proxy(self):
-        # if no proxies, fetch them
-        if not self.proxies:
-            self.proxies = asyncio.run(self.get_proxies())
         # return a random proxy
-        return random.choice(self.proxies)
+        try:
+            random.choice(self.proxies)
+        except IndexError:
+            logger.error("No proxies available. Try fetching new proxies.")
+            return None
