@@ -174,7 +174,7 @@ class ProxyHelper:
             self.save_proxies()
             return self.proxies
 
-    def get_proxy(self):
+    async def get_proxy(self):
         if not self.proxies:
-            asyncio.run(self.get_proxies())
+            await self.get_proxies()
         return random.choice(self.proxies)
