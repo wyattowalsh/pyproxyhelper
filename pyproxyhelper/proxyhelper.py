@@ -135,7 +135,7 @@ class ProxyHelper:
             return
         # add with timestamp as column name
         df = pd.DataFrame(self.proxies, columns=[datetime.now().isoformat()])
-        df.to_csv(filename, index=False)
+        df.to_csv(filename, index=False, 
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
         return df
 
