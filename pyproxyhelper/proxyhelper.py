@@ -3,6 +3,7 @@ File: pyproxyhelper/proxyhelper.py
 Author: @wyattowalsh
 Description: Main module for the pyproxyhelper package.
 """
+import asyncio
 import os
 import random
 from datetime import datetime, timedelta
