@@ -136,7 +136,7 @@ class ProxyHelper:
             if isinstance(proxies, Exception):
                 logger.error(f"Error fetching proxies: {proxies}")
             else:
-                self.proxies = self.proxies | set(proxies)
+                self.proxies = list(set(self.proxies) | set(proxies))
         return self.proxies
 
     def save_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame | None:
