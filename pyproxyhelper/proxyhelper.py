@@ -162,7 +162,7 @@ class ProxyHelper:
             df = self.save_proxies()
             return df
 
-    def get_proxies(self, force: bool = False) -> list:
+    async def get_proxies(self, force: bool = False) -> list:
         df = self.load_proxies()
         if datetime.now() - timedelta(hours=1) < pd.to_datetime(df.columns[0]):
             self.proxies = df[df.columns[0]].tolist()
@@ -170,11 +170,11 @@ class ProxyHelper:
             return self.proxies
         else:
             logger.info("Proxies file is outdated, fetching new proxies")
-            self.proxies = asyncio.run(self.get_proxies_helper())
+            self.proxies = await self.get_proxies_helper()
             self.save_proxies()
             return self.proxies
 
     def get_proxy(self):
         if not self.proxies:
-            self.get_proxies()
+            asyncio.run(self.get_proxies())
         return random.choice(self.proxies)
