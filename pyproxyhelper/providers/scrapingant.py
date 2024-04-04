@@ -3,8 +3,6 @@ File: pyproxyhelper/providers/scrapingant.py
 Author: @wyattowalsh
 Description: Provider class for the ScrapingAnt source.
 """
-import asyncio
-
 import pandas as pd
 from aiohttp import ClientSession
 from loguru import logger

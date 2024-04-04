@@ -6,8 +6,6 @@ Description: base class for all proxy providers.
 from abc import ABC, abstractmethod
 
 from aiohttp import ClientSession
-from loguru import logger
-
 
 PROXY_CHECK_TIMEOUT = 5
 PROXY_CHECK_URL = 'http://example.com'
