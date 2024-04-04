@@ -131,12 +131,12 @@ class ProxyHelper:
         tasks = (self.fetch_provider_proxies(
             provider) for provider in self.providers)
         proxies_lists = await asyncio.gather(*tasks, return_exceptions=True)
-        self.proxies = []
+        self.proxies = set()
         for proxies in proxies_lists:
             if isinstance(proxies, Exception):
                 logger.error(f"Error fetching proxies: {proxies}")
             else:
-                self.proxies = self.proxies + proxies
+                self.proxies = self.proxies | set(proxies)
         return self.proxies
 
     def save_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame | None:
