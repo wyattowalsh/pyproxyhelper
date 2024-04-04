@@ -109,7 +109,7 @@ class ProxyHelper:
         """
         start_logger(console=log_to_console, file=log_to_file)
         self.providers = PROVIDERS
-        self.proxies = []
+        self.proxies = self.get_proxies()
 
     async def fetch_provider_proxies(self, provider: Provider) -> list:
         """Fetch proxies from a given provider.
