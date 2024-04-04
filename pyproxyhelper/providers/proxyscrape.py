@@ -3,6 +3,8 @@ File: pyproxyhelper/providers/proxyscrape.py
 Author: @wyattowalsh
 Description: Provider class for the ProxyScrape source.
 """
+import asyncio
+
 from aiohttp import ClientSession
 from loguru import logger
 

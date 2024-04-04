@@ -3,6 +3,8 @@ File: pyproxyhelper/providers/speedx.py
 Author: @wyattowalsh
 Description: Provider class for the SpeedX GitHub Repo source.
 """
+import asyncio
+
 from aiohttp import ClientSession
 from loguru import logger
 
