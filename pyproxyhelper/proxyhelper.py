@@ -122,7 +122,7 @@ class ProxyHelper:
         """
         try:
             # Assuming provider is already an instance, so we directly call get_proxies without instantiation.
-            return await provider.get_proxies()
+            return await provider().get_proxies()
         except Exception as e:
             logger.error(f"Error in provider {provider.__name__}: {e}")
             return []
