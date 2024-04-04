@@ -26,7 +26,7 @@ class ScrapingAnt(Provider):
             async with ClientSession() as session:
                 tasks = [self.check_proxy(session, proxy) for proxy in proxies]
                 proxies = await asyncio.gather(*tasks)
-                proxies = [proxy for proxy in proxies if proxy is not None]
+                proxies = [proxy for proxy in proxies if proxy]
         except Exception as e:
             logger.error(
                 f"An error occurred while getting proxies from {self.name}: {e}")

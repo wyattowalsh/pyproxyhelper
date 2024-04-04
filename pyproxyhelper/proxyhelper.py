@@ -149,7 +149,7 @@ class ProxyHelper:
         logger.info(f"{len(self.proxies)} proxies saved to {filename}")
         return df
 
-    async def load_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame:
+    def load_proxies(self, filename: str = PROXIES_FILE_NAME) -> pd.DataFrame:
         if os.path.exists(filename):
             df = pd.read_csv(filename)
             self.proxies = df[df.columns[0]].tolist()
@@ -158,26 +158,23 @@ class ProxyHelper:
         else:
             logger.error(f"File {filename} does not exist.")
             logger.info("Fetching new proxies...")
-            self.proxies = await self.get_proxies_helper()
+            self.proxies = asyncio.run(self.get_proxies_helper())
             df = self.save_proxies()
             return df
 
-    async def get_proxies(self, force: bool = False) -> list:
-        df = await self.load_proxies()
+    def get_proxies(self, force: bool = False) -> list:
+        df = self.load_proxies()
         if datetime.now() - timedelta(hours=1) < pd.to_datetime(df.columns[0]):
             self.proxies = df[df.columns[0]].tolist()
             logger.info(f"Retrieved {len(self.proxies)} proxies from file")
             return self.proxies
         else:
             logger.info("Proxies file is outdated, fetching new proxies")
-            self.proxies = await self.get_proxies_helper()
+            self.proxies = asyncio.run(self.get_proxies_helper())
             self.save_proxies()
             return self.proxies
 
     def get_proxy(self):
-        # return a random proxy
-        try:
-            random.choice(self.proxies)
-        except IndexError:
-            logger.error("No proxies available. Try fetching new proxies.")
-            return None
+        if not self.proxies:
+            self.get_proxies()
+        return random.choice(self.proxies)

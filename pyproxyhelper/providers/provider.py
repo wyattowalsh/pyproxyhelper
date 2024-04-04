@@ -16,13 +16,6 @@ class Provider(ABC):
         self.proxies = []
         self.name = name
 
-    @abstractmethod
-    def get_proxies(self) -> list:
-        """
-        abstract method to be implemented by all providers.
-        """
-        pass
-
     async def check_proxy(self, session: ClientSession, proxy: str) -> str | None:
         """checks if a proxy is valid by making a request to the check url.
 
@@ -41,3 +34,10 @@ class Provider(ABC):
                     return None
         except Exception:
             return None
+
+    @abstractmethod
+    async def get_proxies(self) -> list:
+        """
+        abstract method to be implemented by all providers.
+        """
+        pass
