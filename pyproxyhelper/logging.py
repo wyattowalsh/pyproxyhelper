@@ -20,7 +20,7 @@ PRINT_CONFIG = {
 LOG_CONFIG = {
     "console": {
         "format":
-        "🕸️ <green>executed at: {time:YYYY-MM-DD at HH:mm:ss}</green> | <k><b>module:</b> {module}</k> <b>⇨</b> <e><b>function:</b> {function}</e> <b>⇨</b> <c><b>line #:</b> {line}</c> |  <yellow><b>elapsed time:</b> <u>{elapsed}</u></yellow> | <level><b>{level}</b></level> ⇨ {message} <red>{exception}</red> 🌎",
+        "🕸️ <green>executed at: {time:YYYY-MM-DD at HH:mm:ss}</green> | <b>module:</b> {module} <b>⇨</b> <e><b>function:</b> {function}</e> <b>⇨</b> <c><b>line #:</b> {line}</c> |  <yellow><b>elapsed time:</b> <u>{elapsed}</u></yellow> | <level><b>{level}</b></level> ⇨ {message} <red>{exception}</red> 🌎",
     },
     "file": {
         "format":
@@ -58,9 +58,6 @@ def start_logger(
     This function sets up the logger to output to the console and/or file based on the provided configurations.
     It ensures the log directory exists, and formats the log filenames with timestamps for uniqueness.
     """
-    if not console and not file:
-        raise ValueError( "At least one of console or file must be enabled" )
-
     logger.remove()
 
     log_folder_path = Path( log_folder )

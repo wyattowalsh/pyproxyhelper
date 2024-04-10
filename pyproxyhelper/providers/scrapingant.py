@@ -12,24 +12,26 @@ from loguru import logger
 from .provider import Provider
 
 
-class ScrapingAnt(Provider):
-    def __init__(self, name: str = "ScrapingAnt"):
-        super().__init__(name=name)
+class ScrapingAnt( Provider ):
+
+    def __init__( self, name: str = "ScrapingAnt" ):
+        super().__init__( name=name )
         self.url = "https://scrapingant.com/proxies"
 
-    async def get_proxies(self):
-        logger.info(f"Getting proxies from {self.name}")
+    async def get_proxies( self ):
+        logger.info( f"Getting proxies from {self.name}" )
         proxies = []
         try:
-            proxies = pd.read_html(self.url)[0]
-            proxies = proxies[proxies["Protocol"] == "HTTP"]["IP"].tolist()
+            proxies = pd.read_html( self.url )[ 0 ]
+            proxies = proxies[ proxies[ "Protocol" ] ==
+                               "HTTP" ][ "IP" ].tolist()
             async with ClientSession() as session:
-                tasks = [self.check_proxy(session, proxy) for proxy in proxies]
-                proxies = await asyncio.gather(*tasks)
-                proxies = [proxy for proxy in proxies if proxy]
+                proxies = await self.check_proxies( session, proxies )
+                proxies = [ proxy for proxy in proxies if proxy ]
         except Exception as e:
             logger.error(
-                f"An error occurred while getting proxies from {self.name}: {e}")
+                f"An error occurred while getting proxies from {self.name}: {e}"
+            )
         else:
-            logger.info(f"Retrieved {len(proxies)} proxies from {self.name}")
+            logger.info( f"Retrieved {len(proxies)} proxies from {self.name}" )
         return proxies
