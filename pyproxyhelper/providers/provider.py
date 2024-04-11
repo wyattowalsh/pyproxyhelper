@@ -52,7 +52,7 @@ class Provider( ABC ):
             list: list of valid proxies.
         """
         proxies = [ self.check_proxy( session, proxy ) for proxy in proxies ]
-        proxies = await asyncio.gather( *tasks )
+        proxies = await asyncio.gather( *proxies )
         return [ proxy for proxy in proxies if proxy ]
 
     @abstractmethod
