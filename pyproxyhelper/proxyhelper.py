@@ -2,25 +2,21 @@
 File: pyproxyhelper/proxyhelper.py
 Author: @wyattowalsh
 Tests: tests/test_proxyhelper.py
-Description: Main module for the pyproxyhelper package.
+Description: Main module for the pyproxyhelper package. Manages proxy retrieval, storage, and loading.
 """
+
 import asyncio
 import os
 import random
 from datetime import datetime, timedelta
+from typing import List, Optional
 
 import pandas as pd
 from loguru import logger
 
-from pyproxyhelper.logging import start_logger
-from pyproxyhelper.providers.provider import Provider
-from pyproxyhelper.providers.proxyscrape import ProxyScrape
-from pyproxyhelper.providers.scrapingant import ScrapingAnt
-from pyproxyhelper.providers.speedx import SpeedX
-
-PROVIDERS = [ ProxyScrape, ScrapingAnt, SpeedX ]
-
-PROXIES_FILE_NAME = "proxies.csv"
+from .config import PROVIDERS, PROXIES_FILE_NAME
+from .logging import start_logger
+from .providers.provider import Provider
 
 
 class ProxyHelper:
@@ -29,49 +25,68 @@ class ProxyHelper:
                   log_to_console: bool = True,
                   log_to_file: bool = True ):
         """
+        Initializes ProxyHelper with logging and prepares proxy provider instances.
+
         Args:
-            log_to_console (bool, optional): whether or not to log to console. Defaults to True.
-            log_to_file (bool, optional): whether or not to log to file. Defaults to True.
+            log_to_console (bool): Enable logging to the console.
+            log_to_file (bool): Enable logging to a file.
         """
         start_logger( console=log_to_console, file=log_to_file )
-        self.providers = PROVIDERS
-        self.proxies = asyncio.run( self.get_proxies() )
+        self.providers = [ provider() for provider in PROVIDERS ]
+        self.proxies: List[ str ] = []
 
-    async def fetch_provider_proxies( self, provider: Provider ) -> list:
-        """Fetch proxies from a given provider.
+    async def fetch_provider_proxies( self,
+                                      provider: Provider ) -> List[ str ]:
+        """
+        Asynchronously fetch proxies from a single provider.
 
         Args:
-            provider: An instance of a Provider class that has a get_proxies method.
+            provider (Provider): The proxy provider instance.
 
         Returns:
-            A list of proxies fetched from the provider, or an empty list in case of an exception.
+            List[str]: A list of proxies fetched from the provider.
         """
         try:
-            # Assuming provider is already an instance, so we directly call get_proxies without instantiation.
-            return await provider().get_proxies()
+            return await provider.get_proxies()
         except Exception as e:
-            logger.error( f"Error in provider {provider.__name__}: {e}" )
+            logger.error( f"Error fetching from {provider.name}: {e}" )
             return []
 
-    async def get_proxies_helper( self ) -> list:
-        tasks = ( self.fetch_provider_proxies( provider )
-                  for provider in self.providers )
-        proxies_lists = await asyncio.gather( *tasks, return_exceptions=True )
-        self.proxies = set()
-        for proxies in proxies_lists:
-            if isinstance( proxies, Exception ):
-                logger.error( f"Error fetching proxies: {proxies}" )
-            else:
-                self.proxies = list( set( self.proxies ) | set( proxies ) )
+    async def get_proxies_helper( self ) -> List[ str ]:
+        """
+        Fetch proxies from all providers and consolidate into a unique list.
+
+        Returns:
+            List[str]: A deduplicated list of all fetched proxies.
+        """
+        tasks = [
+            self.fetch_provider_proxies( provider )
+            for provider in self.providers
+        ]
+        results = await asyncio.gather( *tasks, return_exceptions=True )
+        valid_proxies = {
+            proxy
+            for result in results if not isinstance( result, Exception )
+            for proxy in result
+        }
+        self.proxies = list( valid_proxies )
         return self.proxies
 
-    def save_proxies( self,
-                      filename: str = PROXIES_FILE_NAME
-                     ) -> pd.DataFrame | None:
+    def save_proxies(
+            self,
+            filename: str = PROXIES_FILE_NAME ) -> Optional[ pd.DataFrame ]:
+        """
+        Saves the current list of proxies to a CSV file.
+
+        Args:
+            filename (str): The file name to save the proxies to.
+
+        Returns:
+            Optional[pd.DataFrame]: The DataFrame of proxies if saved successfully, else None.
+        """
         if not self.proxies:
             logger.error( "No proxies to save." )
-            return
-        # add with timestamp as column name
+            return None
         df = pd.DataFrame( self.proxies,
                            columns=[ datetime.now().isoformat() ] )
         df.to_csv( filename, index=False )
@@ -80,6 +95,15 @@ class ProxyHelper:
 
     async def load_proxies(
             self, filename: str = PROXIES_FILE_NAME ) -> pd.DataFrame:
+        """
+        Loads proxies from a CSV file, or fetches new ones if file is outdated or missing.
+
+        Args:
+            filename (str): The file name from which to load proxies.
+
+        Returns:
+            pd.DataFrame: The DataFrame containing the loaded or newly fetched proxies.
+        """
         if os.path.exists( filename ):
             df = pd.read_csv( filename )
             self.proxies = df[ df.columns[ 0 ] ].tolist()
@@ -89,24 +113,42 @@ class ProxyHelper:
         else:
             logger.error( f"File {filename} does not exist." )
             logger.info( "Fetching new proxies..." )
-            self.proxies = await self.get_proxies_helper()
-            df = self.save_proxies()
-            return df
+            await self.get_proxies_helper()
+            return self.save_proxies()
 
-    async def get_proxies( self, force: bool = False ) -> list:
-        df = await self.load_proxies()
-        if datetime.now() - timedelta( hours=1 ) < pd.to_datetime(
-                df.columns[ 0 ] ):
-            self.proxies = df[ df.columns[ 0 ] ].tolist()
-            logger.info( f"Retrieved {len(self.proxies)} proxies from file" )
-            return self.proxies
-        else:
-            logger.info( "Proxies file is outdated, fetching new proxies" )
-            self.proxies = await self.get_proxies_helper()
+    async def get_proxies( self, force: bool = False ) -> List[ str ]:
+        """
+        Retrieve proxies either from file or refresh if forced or file is outdated.
+
+        Args:
+            force (bool): Force the refresh of proxies even if they are considered current.
+
+        Returns:
+            List[str]: A list of proxies ready to use.
+        """
+        if force or not os.path.exists( PROXIES_FILE_NAME ):
+            logger.info(
+                "Forcing refresh or file not found. Fetching new proxies." )
+            await self.get_proxies_helper()
             self.save_proxies()
-            return self.proxies
+        else:
+            df = await self.load_proxies()
+            if datetime.now() - timedelta( hours=1 ) > pd.to_datetime(
+                    df.columns[ 0 ] ):
+                logger.info(
+                    "Proxies file is outdated, fetching new proxies." )
+                await self.get_proxies_helper()
+                self.save_proxies()
 
-    def get_proxy( self ):
+        return self.proxies
+
+    def get_proxy( self ) -> str:
+        """
+        Retrieves a single proxy randomly from the list of available proxies.
+
+        Returns:
+            str: A randomly chosen proxy.
+        """
         if not self.proxies:
             asyncio.run( self.get_proxies() )
         return random.choice( self.proxies )
