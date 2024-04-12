@@ -1,17 +1,14 @@
-"""
-File: pyproxyhelper/main.py
-Author: @wyattowalsh
-Description: Main entry point for the pyproxyhelper package.
-"""
-from pyproxyhelper.proxyhelper import ProxyHelper
+import asyncio
+
+from pyproxyhelper.providers.proxyscrape import ProxyScrape
 
 
-async def helper():
-    ph = ProxyHelper()
-    proxies = await ph.get_proxies()
-    print(proxies)
-    return proxies, ph
+async def main():
+    ps = ProxyScrape()
+    proxies = await ps.get_proxies()
+    print( proxies )
+    return proxies
+
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(helper())
+    asyncio.get_event_loop().run_until_complete( main() )

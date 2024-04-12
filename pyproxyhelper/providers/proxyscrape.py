@@ -31,10 +31,10 @@ class ProxyScrape( Provider ):
                     proxies = await response.text()
                     proxies = proxies.split( "\r\n" )
                     proxies = await self.check_proxies( session, proxies )
+                    logger.info(
+                        f"Retrieved {len(proxies)} proxies from {self.name}" )
+                    return proxies
         except Exception as e:
             logger.error(
                 f"An error occurred while getting proxies from {self.name}: {e}"
             )
-        else:
-            logger.info( f"Retrieved {len(proxies)} proxies from {self.name}" )
-        return proxies

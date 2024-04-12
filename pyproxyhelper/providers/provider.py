@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from aiohttp import ClientSession
 
 PROXY_CHECK_TIMEOUT = 5
-PROXY_CHECK_URL = 'stats.nba.com'
+PROXY_CHECK_URL = 'http://www.example.com'
 
 
 class Provider( ABC ):
@@ -51,12 +51,13 @@ class Provider( ABC ):
         Returns:
             list: list of valid proxies.
         """
-        proxies = [ self.check_proxy( session, proxy ) for proxy in proxies ]
-        proxies = await asyncio.gather( *proxies )
-        return [ proxy for proxy in proxies if proxy ]
+        tasks = [ self.check_proxy( session, proxy ) for proxy in proxies ]
+        proxies = await asyncio.gather( *tasks, return_exceptions=True )
+        proxies = list( set( [ proxy for proxy in proxies if proxy ] ) )
+        return proxies
 
     @abstractmethod
-    async def get_proxies( self ) -> list:
+    async def get_proxies( self, session: ClientSession ) -> list:
         """
         abstract method to be implemented by all providers.
         """

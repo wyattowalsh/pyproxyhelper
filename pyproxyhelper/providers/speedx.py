@@ -32,10 +32,10 @@ class SpeedX( Provider ):
                     proxies = proxies.split( "\n" )
                     proxies = await self.check_proxies( session, proxies )
                     proxies = [ proxy for proxy in proxies if proxy ]
+                    logger.info(
+                        f"Retrieved {len(proxies)} proxies from {self.name}" )
+                    return proxies
         except Exception as e:
             logger.error(
                 f"An error occurred while getting proxies from {self.name}: {e}"
             )
-        else:
-            logger.info( f"Retrieved {len(proxies)} proxies from {self.name}" )
-        return proxies
