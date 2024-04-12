@@ -67,10 +67,9 @@ class ProxyHelper:
         logger.info( "Fetching proxies..." )
         with Pool( len( self.providers ) ) as p:
             proxies = p.map( fetch_proxies, self.providers )
-        self.proxies = list(
-            set( [ proxy for sublist in proxies for proxy in sublist ] ) )
+        proxies = [ proxy for sublist in proxies for proxy in sublist ]
+        self.proxies = list( set( proxies ) )
         logger.info( f"Retrieved {len(self.proxies)} unique proxies." )
-        self.save_proxies()
         return self.proxies
 
     def save_proxies(
