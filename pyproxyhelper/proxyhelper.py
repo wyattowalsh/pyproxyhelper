@@ -70,6 +70,7 @@ class ProxyHelper:
         self.proxies = list(
             set( [ proxy for sublist in proxies for proxy in sublist ] ) )
         logger.info( f"Retrieved {len(self.proxies)} unique proxies." )
+        self.save_proxies()
         return self.proxies
 
     def save_proxies(
