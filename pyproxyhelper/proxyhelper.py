@@ -66,6 +66,7 @@ class ProxyHelper:
         proxies = [ proxy for sublist in proxies for proxy in sublist ]
         self.proxies = list( set( proxies ) )
         logger.info( f"Retrieved {len(self.proxies)} unique proxies." )
+        self.save_proxies()
         return self.proxies
 
     def save_proxies(
@@ -133,7 +134,6 @@ class ProxyHelper:
                 logger.info(
                     "Proxies file is outdated, fetching new proxies." )
                 self.get_proxies_helper()
-        self.save_proxies()
         return self.proxies
 
     def get_proxy( self ) -> str:
