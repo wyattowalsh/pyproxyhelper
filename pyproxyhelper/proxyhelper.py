@@ -30,12 +30,7 @@ def fetch_proxies( provider ) -> List[ str ]:
         """
     try:
         results = asyncio.run( provider.get_proxies() )
-        valid_proxies = {
-            proxy
-            for result in results if not isinstance( result, Exception )
-            for proxy in result
-        }
-        return list( set( valid_proxies ) )
+        return results
     except Exception as e:
         logger.error( f"An error occurred while fetching proxies: {e}" )
         return []
