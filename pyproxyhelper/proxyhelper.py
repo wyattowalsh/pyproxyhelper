@@ -114,8 +114,7 @@ class ProxyHelper:
             logger.error( f"File {filename} does not exist." )
             logger.info( "Fetching new proxies..." )
             self.get_proxies_helper()
-            return pd.DataFrame( self.proxies,
-                                 columns=[ datetime.now().isoformat() ] )
+            return pd.DataFrame( self.proxies, columns=[ datetime.now() ] )
 
     def get_proxies( self, force: bool = False ) -> List[ str ]:
         """
