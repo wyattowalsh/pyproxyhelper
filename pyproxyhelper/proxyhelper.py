@@ -138,6 +138,7 @@ class ProxyHelper:
                 logger.info(
                     "Proxies file is outdated, fetching new proxies." )
                 self.get_proxies_helper()
+        self.save_proxies()
         return self.proxies
 
     def get_proxy( self ) -> str:
