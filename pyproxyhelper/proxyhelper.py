@@ -55,6 +55,7 @@ class ProxyHelper:
         """
         start_logger( console=log_to_console, file=log_to_file )
         self.providers = [ provider() for provider in PROVIDERS ]
+        self.proxies = []
         self.get_proxies()
 
     def get_proxies_helper( self ) -> List[ str ]:
